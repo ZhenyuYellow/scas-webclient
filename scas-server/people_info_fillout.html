@@ -40,7 +40,7 @@
                     <h4>所属社区：上海 上海市 杨浦区 五角场镇 东方名城居委会</h4>
                 </div>
 
-                <div class="col-xs-9 col-sm-9 placeholder">
+                <div class="col-xs-12 col-sm-12 placeholder">
                     <h3 class="sub-header text-left">居民
                         <a class="btn btn-link btn-lg" id="btn_comm_new_row" type="button" th:href="@{/create/small_community(commId=${commId})}">
                             <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
@@ -51,7 +51,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label" for="select_gender">所属小区</label>
                             <div class="col-sm-7">
-                                <select class="form-control" id="select_province" genderVal="1" onchange="checkBuilding(this)">
+                                <select class="form-control" id="select_province" genderVal="1" onchange="checkBuilding(this,1)">
                                     <!--option value="0">东方名城A小区</option-->
                                 </select>
                             </div>
@@ -59,7 +59,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label" for="select_gender">所属楼栋</label>
                             <div class="col-sm-7">
-                                <select class="form-control" id="select_city" genderVal="1">
+                                <select class="form-control" id="select_city" genderVal="1" onchange="checkPeople()">
                                     <!--option value="0">东方名城楼A</option-->
                                 </select>
                             </div>
@@ -142,7 +142,7 @@
 	}
 	
 	$(document).ready(function(){
-		var commid = GetQueryString("commid");
+		var commid = 1;//GetQueryString("commid");
 		var neigId;
 				
 		$.ajax({
@@ -158,6 +158,7 @@
 				//alert('success');
 				if(d.code == 0){
 					neigId = d.data[0].neigId;
+					checkBuilding(neigId, 0);
 					for(var i = 0;i < d.data.length;i++){
 						$('#select_province').append('<option value="' + d.data[i].neigId +'">'+ d.data[i].neigName +'</option>');
 					}
@@ -171,35 +172,18 @@
 	            console.log('Oops')
 	        }
 	    });
-	
-		$.ajax({
-	        type: "POST",
-			url: "http://202.120.40.111:8888/scas-server/api/community/buildings",
-			dataType: 'json',
-			crossDomain: true,
-	        data:  JSON.stringify({
-				"neigId"	:	neigId,
-	        }),
-	        contentType: "application/json",
-	        success: function(d) {
-				if(d.code == 0){
-					for(var i = 0;i < d.data.length;i++){
-						$('#select_city').append('<option value="' + d.data[i].buildingId +'">'+ d.data[i].name +'</option>');
-					}
-				}else{
-					alert(d.msg);
-				}
-	        },
-			
-	        error: function(error) {
-				alert('error');
-	            console.log('Oops')
-	        }
-	    })
+
 	})
 	
-	function checkBuilding(i){
+	function checkBuilding(i, bool){
 		$("#select_city").empty();
+		
+		var t;
+		if(bool == 0){
+			t = i;
+		}else{
+			t = i.value;
+		}
 		
 		$.ajax({
 	        type: "POST",
@@ -207,7 +191,7 @@
 			dataType: 'json',
 			crossDomain: true,
 	        data:  JSON.stringify({
-				"neigId"	:	i.value,
+				"neigId"	:	t,
 	        }),
 	        contentType: "application/json",
 	        success: function(d) {
@@ -216,6 +200,7 @@
 					for(var i = 0;i < d.data.length;i++){
 						$('#select_city').append('<option value="' + d.data[i].buildingId +'">'+ d.data[i].name +'</option>');
 					}
+					checkPeople();
 				}else{
 					alert(d.msg);
 				}
@@ -224,6 +209,48 @@
 	        error: function(error) {
 				alert('error');
 	            console.log('Oops: by comm')
+	        }
+	    })
+	}
+	
+	function checkPeople(){
+		var neigId = $('#select_province').val();
+		var buildingId = $('#select_city').val();
+	
+		var tb_apart = $('#tbody_apartment_edit');
+		tb_apart.empty();
+		$.ajax({
+	        type: "POST",
+			url: "http://202.120.40.111:8888/scas-server/api/people/residents/building",
+			dataType: 'json',
+			crossDomain: true,
+	        data:  JSON.stringify({
+				"commId"	:	1,
+				"neighbourId"	:	neigId,
+				"buildingId"	:	buildingId,
+	        }),
+	        contentType: "application/json",
+	        success: function(d) {
+				//alert('success');
+				if(d.code == 0){
+					for(var i = 0;i < d.data.length;i++){
+						var s;
+						if(d.data[i].gender == 0){
+							s = '男';
+						}else{
+							s = '女';
+						}
+					
+						tb_apart.append('<tr><td>'+ d.data[i].citizenId +'</td><td>'+ d.data[i].name +'</td><td>'+ s +'</td><td>' + d.data[i].age +'</td><td>'+ d.data[i].identificationValue +'</td><td>' +'</td><td>' +'</td></tr>');
+					}
+				}else{
+					alert(d.msg);
+				}
+	        },
+			
+	        error: function(error) {
+				alert('error');
+	            console.log('Oops: by building')
 	        }
 	    })
 	}

@@ -116,6 +116,41 @@
 <!-- EXTRA_SCRIPT -->
 <script src="resources/js/constant.js"></script>
 <script>
+    $(document).ready(function(){
+	alert('s');
+		var commid = 1;
+		
+		var tb_onli = $('#tbody_online_status');
+		//alert(GetQueryString('commid'));
+		
+		$.ajax({
+	        type: "POST",
+			url: "http://202.120.40.111:8888/scas-server/api/monitor/mobile/user",
+			dataType: 'json',
+			crossDomain: true,
+	        data:  JSON.stringify({
+				"commId"	:	commid,
+	        }),
+	        contentType: "application/json",
+	        success: function(d) {
+				alert('success');
+				if(d.code == 0){
+			//		alert(d.data[0].neigName);
+					for(var i = 0;i < d.data.length;i++){
+						tb_onli.append('<tr><td>'+ 1 +'</td><td>'+ d.data[i].userId +'</td><td>'+ d.data[i].status +'</td><td>'+ d.data[i].userName+'</td></tr>');
+					}
+				}else{
+					alert(d.msg);
+				}
+	        },
+			
+	        error: function(error) {
+				alert('error');
+	            console.log('Oops: by comm')
+	        }
+	    })
+	})
+
 //$(document).ready(function(){
 //    var onlineStatusData;
 //    //获取在线状态（测试）
